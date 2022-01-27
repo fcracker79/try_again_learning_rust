@@ -146,4 +146,9 @@ fn main() {
 
     play_with_mutable_arc();
     mutex();
+    send(String::from("ciao"));
+}
+
+fn send<T: Send>(x: T) {
+
 }
