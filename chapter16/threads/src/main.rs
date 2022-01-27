@@ -1,4 +1,5 @@
 use std::borrow::{Borrow, BorrowMut};
+use std::ops::Add;
 use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, mpsc, Mutex};
@@ -83,6 +84,7 @@ fn play_with_arc() {
 
 }
 fn mutex(){
+    println!("Another test on mutexes");
     let m = Arc::new(Mutex::new(5));
     let m_thread = Arc::clone(&m);
     let j = thread::spawn(move || {
@@ -93,6 +95,38 @@ fn mutex(){
     let mut num = m.lock().unwrap();
     *num = 6;
     println!("m = {:?}", m);
+    j.join().unwrap_or("");
+}
+
+
+fn _play_with_mutable_arc_thread(thread: u8, m: &Arc<Mutex<String>>, i: u32) {
+    let mut s = m.lock().unwrap();
+    let old_s = String::from(&*s);
+    let s_new = old_s + format!("thread {}/{}", thread, i).as_str();
+    *s = s_new;
+}
+
+fn play_with_mutable_arc() {
+    println!("Playing with mutable arc");
+    let m = Arc::new(Mutex::new(String::from("hello")));
+    let mut mt = Arc::clone(&m);
+    let mut mt2 = Arc::clone(&m);
+    let j = thread::spawn(move || {
+        for i in 0..100 {
+            _play_with_mutable_arc_thread(1, &mt, i);
+
+            thread::sleep(Duration::from_millis(100));
+        }
+    });
+    let j2 = thread::spawn(move || {
+        for i in 0..100 {
+            _play_with_mutable_arc_thread(2, &mt2, i);
+            thread::sleep(Duration::from_millis(100));
+        }
+    });
+    j.join().unwrap_or(());
+    j2.join().unwrap_or(());
+    println!("play_with_mutable_arc {:?}", *m);
 }
 
 fn main() {
@@ -107,6 +141,6 @@ fn main() {
     multiple_consumers();
     play_with_arc();
 
+    play_with_mutable_arc();
     mutex();
-
 }
