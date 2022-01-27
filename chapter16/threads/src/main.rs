@@ -88,13 +88,16 @@ fn mutex(){
     let m = Arc::new(Mutex::new(5));
     let m_thread = Arc::clone(&m);
     let j = thread::spawn(move || {
+        println!("Attempting to get lock before failing in thread");
         let mut num = m_thread.lock().unwrap();
         panic!("Intentionally panicked while keeping a lock");
     });
-
+    // Let's wait for the thread to start
+    thread::sleep(Duration::from_secs(3));
     let mut num = m.lock().unwrap();
     *num = 6;
     println!("m = {:?}", m);
+    println!("Waiting for a thread to fail after acquiring mutex");
     j.join().unwrap_or("");
 }
 
