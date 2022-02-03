@@ -46,18 +46,33 @@ fn play_with_functions() {
     do_twice(|x| x + 1, 1234);
     do_twice_trait(|x| x + 1, 1234);
 
-    returns_closure()(123);
-    returns_closure_impl()(123);
+    returns_closure(4)(123);
+    returns_closure_impl(3)(123);
 }
 
 // Returned function is accessed via vtable
-fn returns_closure() -> Box<dyn Fn(i32) -> i32> {
-    Box::new(|x| x + 1)
+fn returns_closure(i: u32) -> Box<dyn Fn(i32) -> i32> {
+    let f1 = |x: i32| x + 1;
+    let f2 = |x: i32| x + 2;
+    if i % 2 == 0 {
+        return Box::new(f1);
+    }
+
+    // Here I can return a different type as it uses vtables to determine the real implementation
+    Box::new(f2)
 }
 
 // Function chooses the return value
-fn returns_closure_impl() -> impl Fn(i32) -> i32 {
-    |x| x + 1
+fn returns_closure_impl(i: u32) -> impl Fn(i32) -> i32 {
+    let f1 = |x: i32| x + 1;
+    let f2 = |x: i32| x + 2;
+    if i % 2 == 0 {
+        return f1;
+    }
+
+    // Cannot return f1 as the `impl` forces the callee to decide the real instance.
+    // `f1` is different from `f2` in terms of concrete types though...
+    f1
 }
 
 pub fn main() {
